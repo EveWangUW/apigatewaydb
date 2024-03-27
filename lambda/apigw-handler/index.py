@@ -12,7 +12,7 @@ import uuid   # Module to generate unique identifiers
 logger = logging.getLogger()  # Get the root logger
 logger.setLevel(logging.INFO)  # Set logging level to INFO
 
-# Create a DynamoDB client
+# Create a DynamoDB client!
 dynamodb_client = boto3.client("dynamodb")
 
 # Define the Lambda function handler
