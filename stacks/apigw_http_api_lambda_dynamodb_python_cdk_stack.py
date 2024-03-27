@@ -1,6 +1,4 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: MIT-0
-
+# Import necessary modules from AWS CDK and constructs
 import os
 from aws_cdk import (
     Stack,
@@ -13,14 +11,15 @@ from aws_cdk import (
 )
 from constructs import Construct
 
+# Define the name of the DynamoDB table
 TABLE_NAME = "demo_table"
 
-
+# Define a class representing the CloudFormation stack
 class ApigwHttpApiLambdaDynamodbPythonCdkStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # VPC
+        # Define a Virtual Private Cloud (VPC)
         vpc = ec2.Vpc(
             self,
             "Ingress",
@@ -33,7 +32,7 @@ class ApigwHttpApiLambdaDynamodbPythonCdkStack(Stack):
             ],
         )
         
-        # Create VPC endpoint
+        # Create a VPC endpoint for DynamoDB
         dynamo_db_endpoint = ec2.GatewayVpcEndpoint(
             self,
             "DynamoDBVpce",
@@ -41,24 +40,26 @@ class ApigwHttpApiLambdaDynamodbPythonCdkStack(Stack):
             vpc=vpc,
         )
 
-        # This allows to customize the endpoint policy
+        # Add a policy to the VPC endpoint restricting actions to DynamoDB
         dynamo_db_endpoint.add_to_policy(
-            iam.PolicyStatement(  # Restrict to listing and describing tables
+            iam.PolicyStatement(
                 principals=[iam.AnyPrincipal()],
-                actions=[                "dynamodb:DescribeStream",
-                "dynamodb:DescribeTable",
-                "dynamodb:Get*",
-                "dynamodb:Query",
-                "dynamodb:Scan",
-                "dynamodb:CreateTable",
-                "dynamodb:Delete*",
-                "dynamodb:Update*",
-                "dynamodb:PutItem"],
+                actions=[
+                    "dynamodb:DescribeStream",
+                    "dynamodb:DescribeTable",
+                    "dynamodb:Get*",
+                    "dynamodb:Query",
+                    "dynamodb:Scan",
+                    "dynamodb:CreateTable",
+                    "dynamodb:Delete*",
+                    "dynamodb:Update*",
+                    "dynamodb:PutItem"
+                ],
                 resources=["*"],
             )
         )
 
-        # Create DynamoDb Table
+        # Create a DynamoDB table
         demo_table = dynamodb_.Table(
             self,
             TABLE_NAME,
@@ -67,7 +68,7 @@ class ApigwHttpApiLambdaDynamodbPythonCdkStack(Stack):
             ),
         )
 
-        # Create the Lambda function to receive the request
+        # Create a Lambda function to handle API requests
         api_hanlder = lambda_.Function(
             self,
             "ApiHandler",
@@ -83,11 +84,11 @@ class ApigwHttpApiLambdaDynamodbPythonCdkStack(Stack):
             timeout=Duration.minutes(5),
         )
 
-        # grant permission to lambda to write to demo table
+        # Grant permission to the Lambda function to write to the DynamoDB table
         demo_table.grant_write_data(api_hanlder)
         api_hanlder.add_environment("TABLE_NAME", demo_table.table_name)
 
-        # Create API Gateway
+        # Create an API Gateway
         apigw_.LambdaRestApi(
             self,
             "Endpoint",
